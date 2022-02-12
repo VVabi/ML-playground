@@ -8,10 +8,10 @@ from tensorflow.keras.layers import Dense
 class DQN:
     def __init__(self, num_actions, num_observations, replay_buffer_size, gamma):
         model = tf.keras.Sequential()
-        model.add(Dense(64, activation='relu', input_shape=(num_observations,)))
-        model.add(Dense(128, activation='relu'))
-        model.add(Dense(64, activation='relu'))
-        model.add(Dense(32, activation='relu'))
+        model.add(Dense(24, activation='relu', input_shape=(num_observations,)))
+        model.add(Dense(24, activation='relu'))
+        #model.add(Dense(64, activation='relu'))
+        #model.add(Dense(32, activation='relu'))
         model.add(Dense(num_actions, activation='linear'))
         
         model.compile(optimizer=tf.keras.optimizers.Adam(), loss=tf.keras.losses.MeanSquaredError())
@@ -28,6 +28,7 @@ class DQN:
         self.epochs = 10
         self.sample_size = 10
         self.gamma = 0.99
+        self.total_reward = 0
     def update_target_model(self):
          self.target_model.set_weights(self.build_model.get_weights()) 
         
@@ -59,6 +60,7 @@ class DQN:
         s[0, :] = sraw
         a = self.pick_action(s, eps)
         sprime, r, done, info = environment.step(a)
+        self.total_reward = self.total_reward+r
         self.add_step_to_buffer(s, a, r, sprime, done)
         self.steps = self.steps+1
         if len(self.replay_buffer) >= 10*self.sample_size:
@@ -85,10 +87,9 @@ class DQN:
                     loss = (p-y[ind])**2
             
                 grad = tape.gradient(loss, self.build_model.trainable_variables)
-                
                 self.build_model.optimizer.apply_gradients(zip(grad, self.build_model.trainable_variables))
         
-        return done
+        return done, self.total_reward
        
     def step_no_train(self, environment):
         sraw = np.array(environment.state)
@@ -96,4 +97,9 @@ class DQN:
         s[0, :] = sraw
         a = self.pick_action(s, 0)
         sprime, r, done, info = environment.step(a)
-        return done
+        self.total_reward = self.total_reward+r
+        return done, self.total_reward
+    
+    def reset(self):
+        self.total_reward = 0
+    
