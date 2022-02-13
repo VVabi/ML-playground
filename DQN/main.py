@@ -35,7 +35,7 @@ for i in range(0, episodes):
 
     if i % 20 == 0 and i > 0:
         print("VALIDATING")
-        validation_episodes = 10
+        validation_episodes = 100
         total = 0
         for i in range(0, validation_episodes):
             done = False
@@ -48,5 +48,5 @@ for i in range(0, episodes):
             
         print(total/validation_episodes)
         
-        if total/validation_episodes < 110:
+        if total/validation_episodes > -110:
             break
